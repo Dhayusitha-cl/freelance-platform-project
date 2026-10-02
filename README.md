@@ -1,4 +1,3 @@
-# freelance-platform-project
 # Freelance Platform Project
 
 ## Team Members
