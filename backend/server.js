@@ -127,6 +127,11 @@ app.post("/api/register", async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Registration API running on http://localhost:${PORT}`);
-});
+// Start server when this file is run directly
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Registration API running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
