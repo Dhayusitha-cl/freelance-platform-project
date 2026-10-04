@@ -15,6 +15,7 @@ app.use(express.json());
 // Temporary in-memory user storage
 const users = [];
 const jobs = [];
+const proposals = [];
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -34,6 +35,51 @@ app.post("/api/register", async (req, res) => {
       confirmPassword,
       role
     } = req.body;
+    app.post("/api/proposals", (req, res) => {
+  try {
+    const {
+      jobId,
+      freelancerId,
+      coverLetter,
+      bidAmount
+    } = req.body;
+
+    if (!jobId || !freelancerId || !coverLetter || bidAmount === undefined) {
+      return res.status(400).json({
+        message: "Job ID, freelancer ID, cover letter, and bid amount are required"
+      });
+    }
+
+    const job = jobs.find(existingJob => existingJob.id === Number(jobId));
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found"
+      });
+    }
+
+    const newProposal = {
+      id: proposals.length + 1,
+      jobId: Number(jobId),
+      freelancerId: Number(freelancerId),
+      coverLetter: coverLetter.trim(),
+      bidAmount
+    };
+
+    proposals.push(newProposal);
+
+    return res.status(201).json({
+      message: "Proposal submitted successfully",
+      proposal: newProposal
+    });
+  } catch (error) {
+    console.error("Proposal submission error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+});
 
     // Required-field validation
     if (!name || !email || !password || !confirmPassword || !role) {
@@ -257,6 +303,54 @@ if (deadlineDate <= today) {
     });
   } catch (error) {
     console.error("Job creation error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+});
+// Proposal submission API
+app.post("/api/proposals", (req, res) => {
+  try {
+    const {
+      jobId,
+      freelancerId,
+      coverLetter,
+      bidAmount
+    } = req.body;
+
+    if (!jobId || !freelancerId || !coverLetter || bidAmount === undefined) {
+      return res.status(400).json({
+        message: "Job ID, freelancer ID, cover letter, and bid amount are required"
+      });
+    }
+
+    const job = jobs.find(
+      (existingJob) => existingJob.id === Number(jobId)
+    );
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found"
+      });
+    }
+
+    const newProposal = {
+      id: proposals.length + 1,
+      jobId: Number(jobId),
+      freelancerId: Number(freelancerId),
+      coverLetter: coverLetter.trim(),
+      bidAmount
+    };
+
+    proposals.push(newProposal);
+
+    return res.status(201).json({
+      message: "Proposal submitted successfully",
+      proposal: newProposal
+    });
+  } catch (error) {
+    console.error("Proposal submission error:", error);
 
     return res.status(500).json({
       message: "Internal server error"
