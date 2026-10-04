@@ -1,14 +1,15 @@
 const jobPostForm = document.getElementById("jobPostForm");
 const jobPostMessage = document.getElementById("jobPostMessage");
 
-jobPostForm.addEventListener("submit", function (event) {
+jobPostForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const jobTitle = document.getElementById("jobTitle").value.trim();
     const jobDescription = document.getElementById("jobDescription").value.trim();
-    const budget = document.getElementById("budget").value;
+    const budget = Number(document.getElementById("budget").value);
     const deadline = document.getElementById("deadline").value;
     const category = document.getElementById("category").value;
+    const skills = document.getElementById("skills").value.trim();
 
     if (!jobTitle) {
         jobPostMessage.textContent = "Please enter a job title.";
@@ -35,6 +36,38 @@ jobPostForm.addEventListener("submit", function (event) {
         return;
     }
 
-    jobPostMessage.textContent =
-        "Job posting form is ready for submission.";
+    jobPostMessage.textContent = "Posting job...";
+
+    try {
+        const response = await fetch("http://localhost:3000/api/jobs", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                title: jobTitle,
+                description: jobDescription,
+                budget: budget,
+                deadline: deadline,
+                category: category,
+                skills: skills
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            jobPostMessage.textContent = data.message || "Failed to create job.";
+            return;
+        }
+
+        jobPostMessage.textContent = data.message;
+
+        jobPostForm.reset();
+
+    } catch (error) {
+        console.error("Job posting error:", error);
+        jobPostMessage.textContent =
+            "Unable to connect to the server.";
+    }
 });
