@@ -14,6 +14,7 @@ app.use(express.json());
 
 // Temporary in-memory user storage
 const users = [];
+const jobs = [];
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -198,7 +199,47 @@ app.post("/api/login", async (req, res) => {
     });
   }
 });
+app.post("/api/jobs", (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      budget,
+      deadline,
+      category,
+      skills
+    } = req.body;
 
+    if (!title || !description || !budget || !deadline || !category) {
+      return res.status(400).json({
+        message: "Title, description, budget, deadline, and category are required"
+      });
+    }
+
+    const newJob = {
+      id: jobs.length + 1,
+      title: title.trim(),
+      description: description.trim(),
+      budget,
+      deadline,
+      category: category.trim(),
+      skills: skills ? skills.trim() : ""
+    };
+
+    jobs.push(newJob);
+
+    return res.status(201).json({
+      message: "Job created successfully",
+      job: newJob
+    });
+  } catch (error) {
+    console.error("Job creation error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+});
 // Start server when this file is run directly
 if (require.main === module) {
   app.listen(PORT, () => {
