@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard - Freelance Platform</title>
+</head>
+<body>
+
+    <main>
+        <h1>Client Dashboard</h1>
+
+        <p id="welcomeMessage"></p>
+
+        <button id="logoutButton">Logout</button>
+    </main>
+
+    <script>
+        const token = localStorage.getItem("token");
+        const userData = localStorage.getItem("user");
+
+        if (!token || !userData) {
+            window.location.href = "login.html";
+        } else {
+            const user = JSON.parse(userData);
+
+            if (user.role !== "client") {
+                window.location.href = "login.html";
+            } else {
+                document.getElementById("welcomeMessage").textContent =
+                    `Welcome, ${user.name}! You are logged in as a client.`;
+            }
+        }
+
+        document.getElementById("logoutButton").addEventListener("click", function () {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "login.html";
+        });
+    </script>
+
+</body>
+</html>
