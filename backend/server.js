@@ -211,10 +211,33 @@ app.post("/api/jobs", (req, res) => {
     } = req.body;
 
     if (!title || !description || !budget || !deadline || !category) {
+      
       return res.status(400).json({
         message: "Title, description, budget, deadline, and category are required"
       });
     }
+    if (typeof budget !== "number" || budget <= 0) {
+  return res.status(400).json({
+    message: "Budget must be a positive number"
+  });
+}
+
+const deadlineDate = new Date(deadline);
+
+if (isNaN(deadlineDate.getTime())) {
+  return res.status(400).json({
+    message: "Deadline must be a valid date"
+  });
+}
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+if (deadlineDate <= today) {
+  return res.status(400).json({
+    message: "Deadline must be a future date"
+  });
+}
 
     const newJob = {
       id: jobs.length + 1,
