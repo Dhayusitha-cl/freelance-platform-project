@@ -490,3 +490,132 @@ test("rejects duplicate proposal from the same freelancer", async () => {
     "Freelancer has already submitted a proposal for this job"
   );
 });
+
+test("completes the full freelancer bidding flow", async () => {
+  const freelancerEmail = "flow.freelancer@example.com";
+  const clientEmail = "flow.client@example.com";
+
+  // 1. Register freelancer
+  const freelancerRegister = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Flow Freelancer",
+      email: freelancerEmail,
+      password: "Password123",
+      confirmPassword: "Password123",
+      role: "freelancer"
+    });
+
+  assert.strictEqual(freelancerRegister.statusCode, 201);
+  assert.strictEqual(
+    freelancerRegister.body.user.email,
+    freelancerEmail
+  );
+  assert.strictEqual(
+    freelancerRegister.body.user.role,
+    "freelancer"
+  );
+
+  const freelancerId = freelancerRegister.body.user.id;
+
+  // 2. Register client
+  const clientRegister = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Flow Client",
+      email: clientEmail,
+      password: "Password123",
+      confirmPassword: "Password123",
+      role: "client"
+    });
+
+  assert.strictEqual(clientRegister.statusCode, 201);
+  assert.strictEqual(
+    clientRegister.body.user.email,
+    clientEmail
+  );
+  assert.strictEqual(
+    clientRegister.body.user.role,
+    "client"
+  );
+
+  // 3. Login as client
+  const clientLogin = await request(app)
+    .post("/api/login")
+    .send({
+      email: clientEmail,
+      password: "Password123"
+    });
+
+  assert.strictEqual(clientLogin.statusCode, 200);
+  assert.ok(clientLogin.body.token);
+  assert.strictEqual(
+    clientLogin.body.user.role,
+    "client"
+  );
+
+  // 4. Client creates a job
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: "Full Flow Test Job",
+      description: "Testing the complete freelancer bidding flow.",
+      budget: 1000,
+      deadline: "2099-12-31",
+      category: "web-development",
+      skills: "HTML, CSS, JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.statusCode, 201);
+  assert.strictEqual(
+    jobResponse.body.message,
+    "Job created successfully"
+  );
+  assert.ok(jobResponse.body.job);
+
+  const jobId = jobResponse.body.job.id;
+
+  // 5. Freelancer logs in
+  const freelancerLogin = await request(app)
+    .post("/api/login")
+    .send({
+      email: freelancerEmail,
+      password: "Password123"
+    });
+
+  assert.strictEqual(freelancerLogin.statusCode, 200);
+  assert.ok(freelancerLogin.body.token);
+  assert.strictEqual(
+    freelancerLogin.body.user.role,
+    "freelancer"
+  );
+
+  // 6. Freelancer submits a proposal
+  const proposalResponse = await request(app)
+    .post("/api/proposals")
+    .send({
+      jobId,
+      freelancerId,
+      coverLetter: "I can complete this project successfully.",
+      bidAmount: 900
+    });
+
+  assert.strictEqual(proposalResponse.statusCode, 201);
+  assert.strictEqual(
+    proposalResponse.body.message,
+    "Proposal submitted successfully"
+  );
+  assert.ok(proposalResponse.body.proposal);
+  assert.strictEqual(
+    proposalResponse.body.proposal.jobId,
+    jobId
+  );
+  assert.strictEqual(
+    proposalResponse.body.proposal.freelancerId,
+    freelancerId
+  );
+  assert.strictEqual(
+    proposalResponse.body.proposal.bidAmount,
+    900
+  );
+});
