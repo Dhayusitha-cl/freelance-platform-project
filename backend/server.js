@@ -424,7 +424,61 @@ app.post("/api/proposals", (req, res) => {
     });
   }
 });
+   
+// =========================
+// FREELANCER PROFILE API
+// =========================
 
+app.get("/api/freelancers/:id", (req, res) => {
+  try {
+    const freelancerId = Number(req.params.id);
+
+    // ID validation
+    if (
+      !Number.isInteger(freelancerId) ||
+      freelancerId <= 0
+    ) {
+      return res.status(400).json({
+        message: "Freelancer ID must be a positive integer"
+      });
+    }
+
+    // Find freelancer
+    const freelancer = users.find(
+      (user) => user.id === freelancerId
+    );
+
+    // User does not exist
+    if (!freelancer) {
+      return res.status(404).json({
+        message: "Freelancer not found"
+      });
+    }
+
+    // User exists but is not a freelancer
+    if (freelancer.role !== "freelancer") {
+      return res.status(404).json({
+        message: "Freelancer not found"
+      });
+    }
+
+    // Return public freelancer profile
+    return res.status(200).json({
+      freelancer: {
+        id: freelancer.id,
+        name: freelancer.name,
+        email: freelancer.email,
+        role: freelancer.role
+      }
+    });
+  } catch (error) {
+    console.error("Freelancer profile error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+});
 // =========================
 // START SERVER
 // =========================
