@@ -6,18 +6,22 @@ const jwt = require("jsonwebtoken");
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || "freelance-platform-dev-secret";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "freelance-platform-dev-secret";
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Temporary in-memory user storage
+// Temporary in-memory storage
 const users = [];
 const jobs = [];
 const proposals = [];
 
-// Health check
+// =========================
+// HEALTH CHECK
+// =========================
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
@@ -25,7 +29,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Registration API
+// =========================
+// REGISTRATION API
+// =========================
+
 app.post("/api/register", async (req, res) => {
   try {
     const {
@@ -35,53 +42,8 @@ app.post("/api/register", async (req, res) => {
       confirmPassword,
       role
     } = req.body;
-    app.post("/api/proposals", (req, res) => {
-  try {
-    const {
-      jobId,
-      freelancerId,
-      coverLetter,
-      bidAmount
-    } = req.body;
 
-    if (!jobId || !freelancerId || !coverLetter || bidAmount === undefined) {
-      return res.status(400).json({
-        message: "Job ID, freelancer ID, cover letter, and bid amount are required"
-      });
-    }
-
-    const job = jobs.find(existingJob => existingJob.id === Number(jobId));
-
-    if (!job) {
-      return res.status(404).json({
-        message: "Job not found"
-      });
-    }
-
-    const newProposal = {
-      id: proposals.length + 1,
-      jobId: Number(jobId),
-      freelancerId: Number(freelancerId),
-      coverLetter: coverLetter.trim(),
-      bidAmount
-    };
-
-    proposals.push(newProposal);
-
-    return res.status(201).json({
-      message: "Proposal submitted successfully",
-      proposal: newProposal
-    });
-  } catch (error) {
-    console.error("Proposal submission error:", error);
-
-    return res.status(500).json({
-      message: "Internal server error"
-    });
-  }
-});
-
-    // Required-field validation
+    // Required fields
     if (!name || !email || !password || !confirmPassword || !role) {
       return res.status(400).json({
         message: "All fields are required"
@@ -99,7 +61,7 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    // Basic email validation
+    // Email validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailPattern.test(normalizedEmail)) {
@@ -145,7 +107,7 @@ app.post("/api/register", async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Store user
+    // Create user
     const newUser = {
       id: users.length + 1,
       name: normalizedName,
@@ -156,7 +118,7 @@ app.post("/api/register", async (req, res) => {
 
     users.push(newUser);
 
-    // Never send password/hash to client
+    // Never return password
     return res.status(201).json({
       message: "Registration successful",
       user: {
@@ -175,12 +137,15 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// Login API with JWT
+// =========================
+// LOGIN API
+// =========================
+
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Required-field validation
+    // Required fields
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required"
@@ -194,14 +159,14 @@ app.post("/api/login", async (req, res) => {
       (existingUser) => existingUser.email === normalizedEmail
     );
 
-    // Do not reveal whether email exists
+    // Invalid credentials
     if (!user) {
       return res.status(401).json({
         message: "Invalid email or password"
       });
     }
 
-    // Compare password with hashed password
+    // Check password
     const passwordMatches = await bcrypt.compare(
       password,
       user.password
@@ -213,7 +178,7 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
-    // Create JWT
+    // Generate JWT
     const token = jwt.sign(
       {
         id: user.id,
@@ -226,7 +191,6 @@ app.post("/api/login", async (req, res) => {
       }
     );
 
-    // Successful login
     return res.status(200).json({
       message: "Login successful",
       token,
@@ -245,6 +209,11 @@ app.post("/api/login", async (req, res) => {
     });
   }
 });
+
+// =========================
+// JOB CREATION API
+// =========================
+
 app.post("/api/jobs", (req, res) => {
   try {
     const {
@@ -256,35 +225,47 @@ app.post("/api/jobs", (req, res) => {
       skills
     } = req.body;
 
-    if (!title || !description || !budget || !deadline || !category) {
-      
+    // Required fields
+    if (
+      !title ||
+      !description ||
+      budget === undefined ||
+      budget === null ||
+      !deadline ||
+      !category
+    ) {
       return res.status(400).json({
-        message: "Title, description, budget, deadline, and category are required"
+        message:
+          "Title, description, budget, deadline, and category are required"
       });
     }
+
+    // Budget validation
     if (typeof budget !== "number" || budget <= 0) {
-  return res.status(400).json({
-    message: "Budget must be a positive number"
-  });
-}
+      return res.status(400).json({
+        message: "Budget must be a positive number"
+      });
+    }
 
-const deadlineDate = new Date(deadline);
+    // Deadline validation
+    const deadlineDate = new Date(deadline);
 
-if (isNaN(deadlineDate.getTime())) {
-  return res.status(400).json({
-    message: "Deadline must be a valid date"
-  });
-}
+    if (isNaN(deadlineDate.getTime())) {
+      return res.status(400).json({
+        message: "Deadline must be a valid date"
+      });
+    }
 
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-if (deadlineDate <= today) {
-  return res.status(400).json({
-    message: "Deadline must be a future date"
-  });
-}
+    if (deadlineDate <= today) {
+      return res.status(400).json({
+        message: "Deadline must be a future date"
+      });
+    }
 
+    // Create job
     const newJob = {
       id: jobs.length + 1,
       title: title.trim(),
@@ -309,7 +290,11 @@ if (deadlineDate <= today) {
     });
   }
 });
-// Proposal submission API
+
+// =========================
+// PROPOSAL SUBMISSION API
+// =========================
+
 app.post("/api/proposals", (req, res) => {
   try {
     const {
@@ -319,14 +304,68 @@ app.post("/api/proposals", (req, res) => {
       bidAmount
     } = req.body;
 
-    if (!jobId || !freelancerId || !coverLetter || bidAmount === undefined) {
+    // Required fields
+    if (
+      jobId === undefined ||
+      jobId === null ||
+      freelancerId === undefined ||
+      freelancerId === null ||
+      !coverLetter ||
+      bidAmount === undefined ||
+      bidAmount === null
+    ) {
       return res.status(400).json({
-        message: "Job ID, freelancer ID, cover letter, and bid amount are required"
+        message:
+          "Job ID, freelancer ID, cover letter, and bid amount are required"
       });
     }
 
+    // Job ID validation
+    if (
+      typeof jobId !== "number" ||
+      !Number.isInteger(jobId) ||
+      jobId <= 0
+    ) {
+      return res.status(400).json({
+        message: "Job ID must be a positive integer"
+      });
+    }
+
+    // Freelancer ID validation
+    if (
+      typeof freelancerId !== "number" ||
+      !Number.isInteger(freelancerId) ||
+      freelancerId <= 0
+    ) {
+      return res.status(400).json({
+        message: "Freelancer ID must be a positive integer"
+      });
+    }
+
+    // Cover letter validation
+    if (
+      typeof coverLetter !== "string" ||
+      !coverLetter.trim()
+    ) {
+      return res.status(400).json({
+        message: "Cover letter is required"
+      });
+    }
+
+    // Bid amount validation
+    if (
+      typeof bidAmount !== "number" ||
+      !Number.isFinite(bidAmount) ||
+      bidAmount <= 0
+    ) {
+      return res.status(400).json({
+        message: "Bid amount must be a positive number"
+      });
+    }
+
+    // Check job exists
     const job = jobs.find(
-      (existingJob) => existingJob.id === Number(jobId)
+      (existingJob) => existingJob.id === jobId
     );
 
     if (!job) {
@@ -335,10 +374,38 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
+    // Check freelancer exists
+    const freelancer = users.find(
+      (user) =>
+        user.id === freelancerId &&
+        user.role === "freelancer"
+    );
+
+    if (!freelancer) {
+      return res.status(404).json({
+        message: "Freelancer not found"
+      });
+    }
+
+    // Prevent duplicate proposal
+    const existingProposal = proposals.find(
+      (proposal) =>
+        proposal.jobId === jobId &&
+        proposal.freelancerId === freelancerId
+    );
+
+    if (existingProposal) {
+      return res.status(409).json({
+        message:
+          "Freelancer has already submitted a proposal for this job"
+      });
+    }
+
+    // Create proposal
     const newProposal = {
       id: proposals.length + 1,
-      jobId: Number(jobId),
-      freelancerId: Number(freelancerId),
+      jobId,
+      freelancerId,
       coverLetter: coverLetter.trim(),
       bidAmount
     };
@@ -357,11 +424,16 @@ app.post("/api/proposals", (req, res) => {
     });
   }
 });
-// Start server when this file is run directly
+
+// =========================
+// START SERVER
+// =========================
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`API running on http://localhost:${PORT}`);
   });
 }
 
+// Export app for tests
 module.exports = app;
