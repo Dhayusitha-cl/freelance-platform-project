@@ -505,6 +505,112 @@ test("completes the full freelancer bidding flow", async () => {
       confirmPassword: "Password123",
       role: "freelancer"
     });
+     
+
+// =========================
+// T18 FREELANCER PROFILE API TESTS
+// =========================
+
+test("returns a freelancer profile successfully", async () => {
+  const email = `profile-${Date.now()}@example.com`;
+
+  const registerResponse = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Profile Freelancer",
+      email,
+      password: "password123",
+      confirmPassword: "password123",
+      role: "freelancer"
+    });
+
+  assert.strictEqual(registerResponse.status, 201);
+
+  const freelancerId = registerResponse.body.user.id;
+
+  const response = await request(app)
+    .get(`/api/freelancers/${freelancerId}`);
+
+  assert.strictEqual(response.status, 200);
+  assert.ok(response.body.freelancer);
+
+  assert.strictEqual(
+    response.body.freelancer.id,
+    freelancerId
+  );
+
+  assert.strictEqual(
+    response.body.freelancer.name,
+    "Profile Freelancer"
+  );
+
+  assert.strictEqual(
+    response.body.freelancer.email,
+    email
+  );
+
+  assert.strictEqual(
+    response.body.freelancer.role,
+    "freelancer"
+  );
+
+  assert.strictEqual(
+    response.body.freelancer.password,
+    undefined
+  );
+});
+
+test("rejects freelancer profile request with invalid ID", async () => {
+  const response = await request(app)
+    .get("/api/freelancers/-1");
+
+  assert.strictEqual(response.status, 400);
+
+  assert.strictEqual(
+    response.body.message,
+    "Freelancer ID must be a positive integer"
+  );
+});
+
+test("returns 404 when freelancer does not exist", async () => {
+  const response = await request(app)
+    .get("/api/freelancers/99999");
+
+  assert.strictEqual(response.status, 404);
+
+  assert.strictEqual(
+    response.body.message,
+    "Freelancer not found"
+  );
+});
+
+test("does not return a client as a freelancer", async () => {
+  const email = `client-profile-${Date.now()}@example.com`;
+
+  const registerResponse = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Profile Client",
+      email,
+      password: "password123",
+      confirmPassword: "password123",
+      role: "client"
+    });
+
+  assert.strictEqual(registerResponse.status, 201);
+
+  const clientId = registerResponse.body.user.id;
+
+  const response = await request(app)
+    .get(`/api/freelancers/${clientId}`);
+
+  assert.strictEqual(response.status, 404);
+
+  assert.strictEqual(
+    response.body.message,
+    "Freelancer not found"
+  );
+});
 
   assert.strictEqual(freelancerRegister.statusCode, 201);
   assert.strictEqual(
