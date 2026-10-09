@@ -612,6 +612,82 @@ test("does not return a client as a freelancer", async () => {
   );
 });
 
+test("accepting a proposal creates a notification for the freelancer", async () => {
+  const email = `notification-${Date.now()}@example.com`;
+
+  const registerResponse = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Notification Freelancer",
+      email,
+      password: "password123",
+      confirmPassword: "password123",
+      role: "freelancer"
+    });
+
+  assert.strictEqual(registerResponse.status, 201);
+
+  const freelancerId = registerResponse.body.user.id;
+
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: "Notification Test Job",
+      description: "Testing proposal acceptance notifications",
+      budget: 1500,
+      deadline: "2026-12-30",
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.status, 201);
+
+  const jobId = jobResponse.body.job.id;
+
+  const proposalResponse = await request(app)
+    .post("/api/proposals")
+    .send({
+      jobId,
+      freelancerId,
+      coverLetter: "I can complete this project.",
+      bidAmount: 1200
+    });
+
+  assert.strictEqual(proposalResponse.status, 201);
+
+  const proposalId = proposalResponse.body.proposal.id;
+
+  const acceptResponse = await request(app)
+    .post(`/api/proposals/${proposalId}/accept`);
+
+  assert.strictEqual(acceptResponse.status, 200);
+  assert.strictEqual(
+    acceptResponse.body.proposal.status,
+    "accepted"
+  );
+  assert.strictEqual(
+    acceptResponse.body.notification.userId,
+    freelancerId
+  );
+  assert.strictEqual(
+    acceptResponse.body.notification.type,
+    "proposal_accepted"
+  );
+
+  const notificationResponse = await request(app)
+    .get(`/api/notifications/${freelancerId}`);
+
+  assert.strictEqual(notificationResponse.status, 200);
+  assert.strictEqual(
+    notificationResponse.body.notifications.length,
+    1
+  );
+  assert.strictEqual(
+    notificationResponse.body.notifications[0].proposalId,
+    proposalId
+  );
+});
+
   assert.strictEqual(freelancerRegister.statusCode, 201);
   assert.strictEqual(
     freelancerRegister.body.user.email,

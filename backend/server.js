@@ -17,6 +17,7 @@ app.use(express.json());
 const users = [];
 const jobs = [];
 const proposals = [];
+const notifications = [];
 
 // =========================
 // HEALTH CHECK
@@ -424,7 +425,97 @@ app.post("/api/proposals", (req, res) => {
     });
   }
 });
-   
+ 
+ // =========================
+// PROPOSAL ACCEPTANCE AND NOTIFICATION API
+// =========================
+
+app.post("/api/proposals/:id/accept", (req, res) => {
+  const proposalId = Number(req.params.id);
+
+  if (!Number.isInteger(proposalId) || proposalId <= 0) {
+    return res.status(400).json({
+      message: "Invalid proposal ID"
+    });
+  }
+
+  const proposal = proposals.find(
+    (item) => item.id === proposalId
+  );
+
+  if (!proposal) {
+    return res.status(404).json({
+      message: "Proposal not found"
+    });
+  }
+
+  if (proposal.status === "accepted") {
+    return res.status(409).json({
+      message: "Proposal already accepted"
+    });
+  }
+
+  const job = jobs.find(
+    (item) => item.id === proposal.jobId
+  );
+
+  if (!job) {
+    return res.status(404).json({
+      message: "Job not found"
+    });
+  }
+
+  proposal.status = "accepted";
+
+  const notification = {
+    id: notifications.length + 1,
+    userId: proposal.freelancerId,
+    type: "proposal_accepted",
+    message: `Your proposal for "${job.title}" has been accepted.`,
+    proposalId: proposal.id,
+    jobId: proposal.jobId,
+    read: false,
+    createdAt: new Date().toISOString()
+  };
+
+  notifications.push(notification);
+
+  return res.status(200).json({
+    message: "Proposal accepted and notification created",
+    proposal,
+    notification
+  });
+});
+
+// =========================
+// GET USER NOTIFICATIONS
+// =========================
+
+app.get("/api/notifications/:userId", (req, res) => {
+  const userId = Number(req.params.userId);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({
+      message: "Invalid user ID"
+    });
+  }
+
+  const user = users.find((item) => item.id === userId);
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found"
+    });
+  }
+
+  const userNotifications = notifications.filter(
+    (item) => item.userId === userId
+  );
+
+  return res.status(200).json({
+    notifications: userNotifications
+  });
+});  
 // =========================
 // FREELANCER PROFILE API
 // =========================
