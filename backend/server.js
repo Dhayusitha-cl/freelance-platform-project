@@ -658,6 +658,14 @@ app.post("/api/milestones", (req, res) => {
       });
     }
 
+    // T-23: Due date must be strictly in the future.
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (dueDate <= today) {
+      return res.status(400).json({
+        message: "Due date must be in the future"
+      });
+    }
     // Find an existing job by title, ignoring case and outer spaces.
     const normalizedJobTitle = jobTitle.trim().toLowerCase();
 

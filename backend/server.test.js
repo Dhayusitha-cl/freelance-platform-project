@@ -984,6 +984,46 @@ test("rejects milestone creation with a negative amount", async () => {
   );
 });
 
+test("rejects milestone creation with a past due date", async () => {
+  const jobTitle = `Past Due Date Job ${Date.now()}`;
+
+  const futureJobDeadline = new Date(
+    Date.now() + 30 * 24 * 60 * 60 * 1000
+  ).toISOString().slice(0, 10);
+
+  const pastDueDate = new Date(
+    Date.now() - 24 * 60 * 60 * 1000
+  ).toISOString().slice(0, 10);
+
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: jobTitle,
+      description: "A job for past due date testing",
+      budget: 1000,
+      deadline: futureJobDeadline,
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.status, 201);
+
+  const response = await request(app)
+    .post("/api/milestones")
+    .send({
+      jobTitle,
+      title: "Past Due Milestone",
+      description: "Testing past due date rejection",
+      dueDate: pastDueDate,
+      amount: 250
+    });
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Due date must be in the future"
+  );
+});
 test("rejects milestone creation with an invalid date", async () => {
   const jobTitle = `Invalid Date Job ${Date.now()}`;
 
