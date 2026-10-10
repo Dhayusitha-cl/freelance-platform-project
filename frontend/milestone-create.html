@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Milestone - Freelance Platform</title>
+    <link rel="stylesheet" href="milestone-create.css">
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-content">
+            <div>
+                <p class="eyebrow">FREELANCE PLATFORM</p>
+                <h1>Create a Milestone</h1>
+                <p class="header-subtitle">
+                    Break your project into clear, manageable steps.
+                </p>
+            </div>
+            <button type="button" id="logoutBtn" class="logout-btn">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="freelancer-dashboard.html">Dashboard</a>
+            <span aria-hidden="true">/</span>
+            <span>Create Milestone</span>
+        </nav>
+
+        <section class="milestone-card">
+            <div class="section-heading">
+                <div class="step-number" aria-hidden="true">01</div>
+                <div>
+                    <h2>Milestone details</h2>
+                    <p>
+                        Enter the task and delivery details for this milestone.
+                    </p>
+                </div>
+            </div>
+
+            <form id="milestoneForm">
+                <div class="form-group">
+                    <label for="jobTitle">Project or job title</label>
+                    <input
+                        type="text"
+                        id="jobTitle"
+                        name="jobTitle"
+                        placeholder="e.g. E-commerce website development"
+                        required
+                        maxlength="120"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="milestoneTitle">Milestone title</label>
+                    <input
+                        type="text"
+                        id="milestoneTitle"
+                        name="milestoneTitle"
+                        placeholder="e.g. Complete homepage design"
+                        required
+                        maxlength="100"
+                    >
+                    <small>Choose a short, descriptive title.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="5"
+                        placeholder="Describe the work and expected deliverables..."
+                        required
+                        maxlength="1000"
+                    ></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dueDate">Target due date</label>
+                        <input
+                            type="date"
+                            id="dueDate"
+                            name="dueDate"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Milestone amount ($)</label>
+                        <input
+                            type="number"
+                            id="amount"
+                            name="amount"
+                            placeholder="e.g. 250"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-note">
+                    <span class="note-icon" aria-hidden="true">i</span>
+                    <p>
+                        Review the details before submitting. API integration
+                        will be handled separately.
+                    </p>
+                </div>
+
+                <div class="form-actions">
+                    <button
+                        type="button"
+                        id="cancelBtn"
+                        class="secondary-btn"
+                    >
+                        Cancel
+                    </button>
+                    <button type="submit" class="primary-btn">
+                        Create Milestone
+                        <span aria-hidden="true">→</span>
+                    </button>
+                </div>
+
+                <p
+                    id="formMessage"
+                    class="form-message"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+            </form>
+        </section>
+
+        <p class="footer-note">
+            Clear milestones help keep project work organised and transparent.
+        </p>
+    </main>
+
+    <script src="milestone-create.js"></script>
+</body>
+</html>
