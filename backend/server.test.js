@@ -801,3 +801,95 @@ test("accepting a proposal creates a notification for the freelancer", async () 
     900
   );
 });
+
+
+test("rejects acceptance with an invalid proposal ID", async () => {
+  const response = await request(app)
+    .post("/api/proposals/-1/accept");
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Invalid proposal ID"
+  );
+});
+
+test("rejects acceptance when proposal does not exist", async () => {
+  const response = await request(app)
+    .post("/api/proposals/999999/accept");
+
+  assert.strictEqual(response.status, 404);
+  assert.strictEqual(
+    response.body.message,
+    "Proposal not found"
+  );
+});
+
+test("rejects accepting the same proposal twice", async () => {
+  // 1. Register a freelancer
+  const email = `repeat-accept-${Date.now()}@example.com`;
+
+  const registerResponse = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Acceptance Test Freelancer",
+      email,
+      password: "password123",
+      confirmPassword: "password123",
+      role: "freelancer"
+    });
+
+  assert.strictEqual(registerResponse.status, 201);
+
+  const freelancerId = registerResponse.body.user.id;
+
+  // 2. Create a job
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: "Repeated Acceptance Test",
+      description: "Testing repeated proposal acceptance",
+      budget: 1500,
+      deadline: "2026-12-30",
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.status, 201);
+
+  const jobId = jobResponse.body.job.id;
+
+  // 3. Submit a proposal
+  const proposalResponse = await request(app)
+    .post("/api/proposals")
+    .send({
+      jobId,
+      freelancerId,
+      coverLetter: "I can complete this project.",
+      bidAmount: 1200
+    });
+
+  assert.strictEqual(proposalResponse.status, 201);
+
+  const proposalId = proposalResponse.body.proposal.id;
+
+  // 4. Accept the proposal for the first time
+  const firstAcceptance = await request(app)
+    .post(`/api/proposals/${proposalId}/accept`);
+
+  assert.strictEqual(firstAcceptance.status, 200);
+  assert.strictEqual(
+    firstAcceptance.body.proposal.status,
+    "accepted"
+  );
+
+  // 5. Attempt to accept the same proposal again
+  const secondAcceptance = await request(app)
+    .post(`/api/proposals/${proposalId}/accept`);
+
+  assert.strictEqual(secondAcceptance.status, 409);
+  assert.strictEqual(
+    secondAcceptance.body.message,
+    "Proposal already accepted"
+  );
+});
