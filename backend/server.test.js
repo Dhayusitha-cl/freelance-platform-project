@@ -893,3 +893,141 @@ test("rejects accepting the same proposal twice", async () => {
     "Proposal already accepted"
   );
 });
+
+ // =========================
+// MILESTONE API TESTS
+// =========================
+
+test("creates a milestone for an existing job", async () => {
+  const jobTitle = `Milestone Test Job ${Date.now()}`;
+
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: jobTitle,
+      description: "A job created for milestone testing",
+      budget: 1000,
+      deadline: "2026-12-30",
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.status, 201);
+
+  const response = await request(app)
+    .post("/api/milestones")
+    .send({
+      jobTitle,
+      title: "Homepage design",
+      description: "Complete the homepage layout",
+      dueDate: "2026-12-15",
+      amount: 250
+    });
+
+  assert.strictEqual(response.status, 201);
+  assert.strictEqual(
+    response.body.message,
+    "Milestone created successfully"
+  );
+  assert.ok(response.body.milestone.id);
+  assert.strictEqual(
+    response.body.milestone.jobId,
+    jobResponse.body.job.id
+  );
+  assert.strictEqual(
+    response.body.milestone.title,
+    "Homepage design"
+  );
+  assert.strictEqual(response.body.milestone.amount, 250);
+});
+
+test("rejects milestone creation when required fields are missing", async () => {
+  const response = await request(app)
+    .post("/api/milestones")
+    .send({
+      title: "Homepage design"
+    });
+
+  assert.strictEqual(response.status, 400);
+});
+
+test("rejects milestone creation with a negative amount", async () => {
+  const jobTitle = `Negative Amount Job ${Date.now()}`;
+
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: jobTitle,
+      description: "A job for amount validation",
+      budget: 1000,
+      deadline: "2026-12-30",
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.status, 201);
+
+  const response = await request(app)
+    .post("/api/milestones")
+    .send({
+      jobTitle,
+      title: "Homepage design",
+      description: "Complete the homepage layout",
+      dueDate: "2026-12-15",
+      amount: -10
+    });
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Amount must be a non-negative number"
+  );
+});
+
+test("rejects milestone creation with an invalid date", async () => {
+  const jobTitle = `Invalid Date Job ${Date.now()}`;
+
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: jobTitle,
+      description: "A job for date validation",
+      budget: 1000,
+      deadline: "2026-12-30",
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.status, 201);
+
+  const response = await request(app)
+    .post("/api/milestones")
+    .send({
+      jobTitle,
+      title: "Homepage design",
+      description: "Complete the homepage layout",
+      dueDate: "2026-02-30",
+      amount: 250
+    });
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Due date must be a valid date"
+  );
+});
+
+test("returns 404 when milestone job title does not exist", async () => {
+  const response = await request(app)
+    .post("/api/milestones")
+    .send({
+      jobTitle: `Missing Job ${Date.now()}`,
+      title: "Homepage design",
+      description: "Complete the homepage layout",
+      dueDate: "2026-12-15",
+      amount: 250
+    });
+
+  assert.strictEqual(response.status, 404);
+  assert.strictEqual(response.body.message, "Job not found");
+});

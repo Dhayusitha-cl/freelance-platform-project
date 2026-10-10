@@ -18,7 +18,7 @@ const users = [];
 const jobs = [];
 const proposals = [];
 const notifications = [];
-
+const milestones = [];
 // =========================
 // HEALTH CHECK
 // =========================
@@ -573,6 +573,131 @@ app.get("/api/freelancers/:id", (req, res) => {
 // =========================
 // START SERVER
 // =========================
+
+ // =========================
+// MILESTONE CREATION API
+// =========================
+
+app.post("/api/milestones", (req, res) => {
+  try {
+    const {
+      jobTitle,
+      title,
+      description,
+      dueDate,
+      amount
+    } = req.body;
+
+    // Required-field validation
+    if (
+      typeof jobTitle !== "string" ||
+      !jobTitle.trim() ||
+      typeof title !== "string" ||
+      !title.trim() ||
+      typeof description !== "string" ||
+      !description.trim() ||
+      !dueDate ||
+      amount === undefined ||
+      amount === null
+    ) {
+      return res.status(400).json({
+        message:
+          "Job title, milestone title, description, due date, and amount are required"
+      });
+    }
+
+    // Field-length validation matching the form
+    if (jobTitle.trim().length > 120) {
+      return res.status(400).json({
+        message: "Job title must not exceed 120 characters"
+      });
+    }
+
+    if (title.trim().length > 100) {
+      return res.status(400).json({
+        message: "Milestone title must not exceed 100 characters"
+      });
+    }
+
+    if (description.trim().length > 1000) {
+      return res.status(400).json({
+        message: "Description must not exceed 1000 characters"
+      });
+    }
+
+    // Amount validation
+    if (
+      typeof amount !== "number" ||
+      !Number.isFinite(amount) ||
+      amount < 0
+    ) {
+      return res.status(400).json({
+        message: "Amount must be a non-negative number"
+      });
+    }
+
+    // Require a valid YYYY-MM-DD calendar date.
+    // Future-date rules will be handled separately in T-23.
+    if (
+      typeof dueDate !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)
+    ) {
+      return res.status(400).json({
+        message: "Due date must use YYYY-MM-DD format"
+      });
+    }
+
+    const parsedDueDate = new Date(`${dueDate}T00:00:00.000Z`);
+
+    if (
+      Number.isNaN(parsedDueDate.getTime()) ||
+      parsedDueDate.toISOString().slice(0, 10) !== dueDate
+    ) {
+      return res.status(400).json({
+        message: "Due date must be a valid date"
+      });
+    }
+
+    // Find an existing job by title, ignoring case and outer spaces.
+    const normalizedJobTitle = jobTitle.trim().toLowerCase();
+
+    const job = jobs.find(
+      (existingJob) =>
+        existingJob.title.trim().toLowerCase() === normalizedJobTitle
+    );
+
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found"
+      });
+    }
+
+    // Create milestone
+    const newMilestone = {
+      id: milestones.length + 1,
+      jobId: job.id,
+      jobTitle: job.title,
+      title: title.trim(),
+      description: description.trim(),
+      dueDate,
+      amount,
+      createdAt: new Date().toISOString()
+    };
+
+    milestones.push(newMilestone);
+
+    return res.status(201).json({
+      message: "Milestone created successfully",
+      milestone: newMilestone
+    });
+  } catch (error) {
+    console.error("Milestone creation error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+});
 
 if (require.main === module) {
   app.listen(PORT, () => {
