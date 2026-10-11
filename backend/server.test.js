@@ -939,6 +939,14 @@ test("creates a milestone for an existing job", async () => {
     "Homepage design"
   );
   assert.strictEqual(response.body.milestone.amount, 250);
+  assert.strictEqual(
+    response.body.milestone.description,
+    "Complete the homepage layout"
+  );
+  assert.strictEqual(
+    response.body.milestone.dueDate,
+    "2026-12-15"
+  );
 });
 
 test("rejects milestone creation when required fields are missing", async () => {
@@ -1024,6 +1032,41 @@ test("rejects milestone creation with a past due date", async () => {
     "Due date must be in the future"
   );
 });
+
+
+test("rejects milestone creation with an incorrectly formatted due date", async () => {
+  const jobTitle = `Wrong Date Format Job ${Date.now()}`;
+
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: jobTitle,
+      description: "A job for date format testing",
+      budget: 1000,
+      deadline: "2026-12-30",
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.strictEqual(jobResponse.status, 201);
+
+  const response = await request(app)
+    .post("/api/milestones")
+    .send({
+      jobTitle,
+      title: "Date Format Test",
+      description: "Testing the due date format",
+      dueDate: "15-12-2026",
+      amount: 250
+    });
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Due date must use YYYY-MM-DD format"
+  );
+});
+
 test("rejects milestone creation with an invalid date", async () => {
   const jobTitle = `Invalid Date Job ${Date.now()}`;
 
