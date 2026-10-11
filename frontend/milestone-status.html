@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Milestone Status - Freelance Platform</title>
+    <link rel="stylesheet" href="milestone-status.css">
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-content">
+            <div>
+                <p class="eyebrow">FREELANCE PLATFORM</p>
+                <h1>Update Milestone Status</h1>
+                <p class="header-subtitle">
+                    Track your progress and keep your project up to date.
+                </p>
+            </div>
+            <button type="button" id="logoutBtn" class="logout-btn">
+                Logout
+            </button>
+        </div>
+    </header>
+
+```
+<main class="page-container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="freelancer-dashboard.html">Dashboard</a>
+        <span aria-hidden="true">/</span>
+        <span>Update Milestone Status</span>
+    </nav>
+
+    <section class="milestone-card">
+        <div class="section-heading">
+            <div class="step-number" aria-hidden="true">02</div>
+            <div>
+                <h2>Milestone progress</h2>
+                <p>
+                    Review the milestone and select its new status.
+                </p>
+            </div>
+        </div>
+
+        <div class="milestone-details">
+            <p class="detail-label">Milestone</p>
+            <h3 id="milestoneTitle">Homepage Design</h3>
+
+            <p class="detail-label">Project</p>
+            <p id="jobTitle">E-commerce Website Development</p>
+
+            <div class="status-summary">
+                <span class="detail-label">Current status</span>
+                <span id="currentStatus" class="status-badge pending">
+                    Pending
+                </span>
+            </div>
+        </div>
+
+        <form id="statusForm">
+            <div class="form-group">
+                <label for="newStatus">New status</label>
+                <select id="newStatus" name="newStatus" required>
+                    <option value="">Select a status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+                <small>
+                    Choose the status that reflects your current progress.
+                </small>
+            </div>
+
+            <div class="form-note">
+                <span class="note-icon" aria-hidden="true">i</span>
+                <p>
+                    This is a UI demonstration. Your selection will not
+                    be saved to the backend.
+                </p>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="cancelBtn" class="secondary-btn">
+                    Reset
+                </button>
+                <button type="submit" id="updateBtn" class="primary-btn">
+                    Update Status
+                </button>
+            </div>
+
+            <p
+                id="formMessage"
+                class="form-message"
+                role="status"
+                aria-live="polite"
+            ></p>
+        </form>
+    </section>
+
+    <p class="footer-note">
+        Keep milestone progress clear so everyone understands the work status.
+    </p>
+</main>
+
+<script src="milestone-status.js"></script>
+```
+
+</body>
+</html>
