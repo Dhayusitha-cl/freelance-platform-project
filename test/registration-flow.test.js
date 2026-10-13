@@ -1,7 +1,7 @@
 const { describe, test } = require("node:test");
 const assert = require("node:assert");
 const request = require("supertest");
-const app = require("./server");
+const app = require("../backend/server");
 
 describe("T-4 Registration Flow", () => {
     test("successfully registers a new freelancer", async () => {

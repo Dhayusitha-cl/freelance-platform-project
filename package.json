@@ -1,0 +1,10 @@
+
+{
+  "name": "freelance-platform-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Freelance platform project with centralized automated tests",
+  "scripts": {
+    "test": "set NODE_PATH=backend/node_modules&& node --test test/*.test.js"
+  }
+}
