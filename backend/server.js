@@ -582,6 +582,7 @@ app.post("/api/milestones", (req, res) => {
   }
 });
 
+
 app.patch("/api/milestones/:id/status", (req, res) => {
   const milestoneId = Number(req.params.id);
   const { status } = req.body;
@@ -618,6 +619,18 @@ app.patch("/api/milestones/:id/status", (req, res) => {
     });
   }
 
+  const allowedTransitions = {
+    "Pending": ["In Progress"],
+    "In Progress": ["Completed"],
+    "Completed": []
+  };
+
+  if (!allowedTransitions[milestone.status].includes(status)) {
+    return res.status(400).json({
+      message: `Cannot change milestone status from ${milestone.status} to ${status}`
+    });
+  }
+
   milestone.status = status;
 
   return res.status(200).json({
@@ -633,3 +646,5 @@ if (require.main === module) {
 }
 
 module.exports = app;
+
+
