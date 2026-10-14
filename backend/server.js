@@ -9,19 +9,14 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET =
   process.env.JWT_SECRET || "freelance-platform-dev-secret";
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Temporary in-memory storage
 const users = [];
 const jobs = [];
 const proposals = [];
 const notifications = [];
 const milestones = [];
-// =========================
-// HEALTH CHECK
-// =========================
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -30,21 +25,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// =========================
-// REGISTRATION API
-// =========================
-
 app.post("/api/register", async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      confirmPassword,
-      role
-    } = req.body;
+    const { name, email, password, confirmPassword, role } = req.body;
 
-    // Required fields
     if (!name || !email || !password || !confirmPassword || !role) {
       return res.status(400).json({
         message: "All fields are required"
@@ -55,14 +39,12 @@ app.post("/api/register", async (req, res) => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedRole = role.trim().toLowerCase();
 
-    // Name validation
     if (normalizedName.length < 2) {
       return res.status(400).json({
         message: "Name must contain at least 2 characters"
       });
     }
 
-    // Email validation
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailPattern.test(normalizedEmail)) {
@@ -71,21 +53,18 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    // Password validation
     if (password.length < 8) {
       return res.status(400).json({
         message: "Password must contain at least 8 characters"
       });
     }
 
-    // Confirm password validation
     if (password !== confirmPassword) {
       return res.status(400).json({
         message: "Passwords do not match"
       });
     }
 
-    // Role validation
     const allowedRoles = ["client", "freelancer"];
 
     if (!allowedRoles.includes(normalizedRole)) {
@@ -94,7 +73,6 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    // Duplicate email validation
     const existingUser = users.find(
       (user) => user.email === normalizedEmail
     );
@@ -105,10 +83,8 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const newUser = {
       id: users.length + 1,
       name: normalizedName,
@@ -119,7 +95,6 @@ app.post("/api/register", async (req, res) => {
 
     users.push(newUser);
 
-    // Never return password
     return res.status(201).json({
       message: "Registration successful",
       user: {
@@ -138,15 +113,10 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// =========================
-// LOGIN API
-// =========================
-
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Required fields
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required"
@@ -155,19 +125,16 @@ app.post("/api/login", async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Find user
     const user = users.find(
       (existingUser) => existingUser.email === normalizedEmail
     );
 
-    // Invalid credentials
     if (!user) {
       return res.status(401).json({
         message: "Invalid email or password"
       });
     }
 
-    // Check password
     const passwordMatches = await bcrypt.compare(
       password,
       user.password
@@ -179,7 +146,6 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
-    // Generate JWT
     const token = jwt.sign(
       {
         id: user.id,
@@ -187,9 +153,7 @@ app.post("/api/login", async (req, res) => {
         role: user.role
       },
       JWT_SECRET,
-      {
-        expiresIn: "1h"
-      }
+      { expiresIn: "1h" }
     );
 
     return res.status(200).json({
@@ -211,22 +175,11 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// =========================
-// JOB CREATION API
-// =========================
-
 app.post("/api/jobs", (req, res) => {
   try {
-    const {
-      title,
-      description,
-      budget,
-      deadline,
-      category,
-      skills
-    } = req.body;
+    const { title, description, budget, deadline, category, skills } =
+      req.body;
 
-    // Required fields
     if (
       !title ||
       !description ||
@@ -241,14 +194,12 @@ app.post("/api/jobs", (req, res) => {
       });
     }
 
-    // Budget validation
     if (typeof budget !== "number" || budget <= 0) {
       return res.status(400).json({
         message: "Budget must be a positive number"
       });
     }
 
-    // Deadline validation
     const deadlineDate = new Date(deadline);
 
     if (isNaN(deadlineDate.getTime())) {
@@ -266,7 +217,6 @@ app.post("/api/jobs", (req, res) => {
       });
     }
 
-    // Create job
     const newJob = {
       id: jobs.length + 1,
       title: title.trim(),
@@ -292,20 +242,10 @@ app.post("/api/jobs", (req, res) => {
   }
 });
 
-// =========================
-// PROPOSAL SUBMISSION API
-// =========================
-
 app.post("/api/proposals", (req, res) => {
   try {
-    const {
-      jobId,
-      freelancerId,
-      coverLetter,
-      bidAmount
-    } = req.body;
+    const { jobId, freelancerId, coverLetter, bidAmount } = req.body;
 
-    // Required fields
     if (
       jobId === undefined ||
       jobId === null ||
@@ -321,7 +261,6 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
-    // Job ID validation
     if (
       typeof jobId !== "number" ||
       !Number.isInteger(jobId) ||
@@ -332,7 +271,6 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
-    // Freelancer ID validation
     if (
       typeof freelancerId !== "number" ||
       !Number.isInteger(freelancerId) ||
@@ -343,17 +281,12 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
-    // Cover letter validation
-    if (
-      typeof coverLetter !== "string" ||
-      !coverLetter.trim()
-    ) {
+    if (typeof coverLetter !== "string" || !coverLetter.trim()) {
       return res.status(400).json({
         message: "Cover letter is required"
       });
     }
 
-    // Bid amount validation
     if (
       typeof bidAmount !== "number" ||
       !Number.isFinite(bidAmount) ||
@@ -364,10 +297,7 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
-    // Check job exists
-    const job = jobs.find(
-      (existingJob) => existingJob.id === jobId
-    );
+    const job = jobs.find((existingJob) => existingJob.id === jobId);
 
     if (!job) {
       return res.status(404).json({
@@ -375,11 +305,8 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
-    // Check freelancer exists
     const freelancer = users.find(
-      (user) =>
-        user.id === freelancerId &&
-        user.role === "freelancer"
+      (user) => user.id === freelancerId && user.role === "freelancer"
     );
 
     if (!freelancer) {
@@ -388,7 +315,6 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
-    // Prevent duplicate proposal
     const existingProposal = proposals.find(
       (proposal) =>
         proposal.jobId === jobId &&
@@ -402,7 +328,6 @@ app.post("/api/proposals", (req, res) => {
       });
     }
 
-    // Create proposal
     const newProposal = {
       id: proposals.length + 1,
       jobId,
@@ -425,10 +350,6 @@ app.post("/api/proposals", (req, res) => {
     });
   }
 });
- 
- // =========================
-// PROPOSAL ACCEPTANCE AND NOTIFICATION API
-// =========================
 
 app.post("/api/proposals/:id/accept", (req, res) => {
   const proposalId = Number(req.params.id);
@@ -439,9 +360,7 @@ app.post("/api/proposals/:id/accept", (req, res) => {
     });
   }
 
-  const proposal = proposals.find(
-    (item) => item.id === proposalId
-  );
+  const proposal = proposals.find((item) => item.id === proposalId);
 
   if (!proposal) {
     return res.status(404).json({
@@ -455,9 +374,7 @@ app.post("/api/proposals/:id/accept", (req, res) => {
     });
   }
 
-  const job = jobs.find(
-    (item) => item.id === proposal.jobId
-  );
+  const job = jobs.find((item) => item.id === proposal.jobId);
 
   if (!job) {
     return res.status(404).json({
@@ -487,10 +404,6 @@ app.post("/api/proposals/:id/accept", (req, res) => {
   });
 });
 
-// =========================
-// GET USER NOTIFICATIONS
-// =========================
-
 app.get("/api/notifications/:userId", (req, res) => {
   const userId = Number(req.params.userId);
 
@@ -515,45 +428,26 @@ app.get("/api/notifications/:userId", (req, res) => {
   return res.status(200).json({
     notifications: userNotifications
   });
-});  
-// =========================
-// FREELANCER PROFILE API
-// =========================
+});
 
 app.get("/api/freelancers/:id", (req, res) => {
   try {
     const freelancerId = Number(req.params.id);
 
-    // ID validation
-    if (
-      !Number.isInteger(freelancerId) ||
-      freelancerId <= 0
-    ) {
+    if (!Number.isInteger(freelancerId) || freelancerId <= 0) {
       return res.status(400).json({
         message: "Freelancer ID must be a positive integer"
       });
     }
 
-    // Find freelancer
-    const freelancer = users.find(
-      (user) => user.id === freelancerId
-    );
+    const freelancer = users.find((user) => user.id === freelancerId);
 
-    // User does not exist
-    if (!freelancer) {
+    if (!freelancer || freelancer.role !== "freelancer") {
       return res.status(404).json({
         message: "Freelancer not found"
       });
     }
 
-    // User exists but is not a freelancer
-    if (freelancer.role !== "freelancer") {
-      return res.status(404).json({
-        message: "Freelancer not found"
-      });
-    }
-
-    // Return public freelancer profile
     return res.status(200).json({
       freelancer: {
         id: freelancer.id,
@@ -570,25 +464,11 @@ app.get("/api/freelancers/:id", (req, res) => {
     });
   }
 });
-// =========================
-// START SERVER
-// =========================
-
- // =========================
-// MILESTONE CREATION API
-// =========================
 
 app.post("/api/milestones", (req, res) => {
   try {
-    const {
-      jobTitle,
-      title,
-      description,
-      dueDate,
-      amount
-    } = req.body;
+    const { jobTitle, title, description, dueDate, amount } = req.body;
 
-    // Required-field validation
     if (
       typeof jobTitle !== "string" ||
       !jobTitle.trim() ||
@@ -606,7 +486,6 @@ app.post("/api/milestones", (req, res) => {
       });
     }
 
-    // Field-length validation matching the form
     if (jobTitle.trim().length > 120) {
       return res.status(400).json({
         message: "Job title must not exceed 120 characters"
@@ -625,7 +504,6 @@ app.post("/api/milestones", (req, res) => {
       });
     }
 
-    // Amount validation
     if (
       typeof amount !== "number" ||
       !Number.isFinite(amount) ||
@@ -636,8 +514,6 @@ app.post("/api/milestones", (req, res) => {
       });
     }
 
-    // Require a valid YYYY-MM-DD calendar date.
-    // Future-date rules will be handled separately in T-23.
     if (
       typeof dueDate !== "string" ||
       !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)
@@ -658,7 +534,6 @@ app.post("/api/milestones", (req, res) => {
       });
     }
 
-    // T-23: Due date must be strictly in the future.
     const today = new Date().toISOString().slice(0, 10);
 
     if (dueDate <= today) {
@@ -666,7 +541,7 @@ app.post("/api/milestones", (req, res) => {
         message: "Due date must be in the future"
       });
     }
-    // Find an existing job by title, ignoring case and outer spaces.
+
     const normalizedJobTitle = jobTitle.trim().toLowerCase();
 
     const job = jobs.find(
@@ -680,7 +555,6 @@ app.post("/api/milestones", (req, res) => {
       });
     }
 
-    // Create milestone
     const newMilestone = {
       id: milestones.length + 1,
       jobId: job.id,
@@ -689,6 +563,7 @@ app.post("/api/milestones", (req, res) => {
       description: description.trim(),
       dueDate,
       amount,
+      status: "Pending",
       createdAt: new Date().toISOString()
     };
 
@@ -707,11 +582,54 @@ app.post("/api/milestones", (req, res) => {
   }
 });
 
+app.patch("/api/milestones/:id/status", (req, res) => {
+  const milestoneId = Number(req.params.id);
+  const { status } = req.body;
+
+  if (!Number.isInteger(milestoneId) || milestoneId <= 0) {
+    return res.status(400).json({
+      message: "Invalid milestone ID"
+    });
+  }
+
+  const milestone = milestones.find(
+    (item) => item.id === milestoneId
+  );
+
+  if (!milestone) {
+    return res.status(404).json({
+      message: "Milestone not found"
+    });
+  }
+
+  const allowedStatuses = [
+    "Pending",
+    "In Progress",
+    "Completed"
+  ];
+
+  if (
+    typeof status !== "string" ||
+    !allowedStatuses.includes(status)
+  ) {
+    return res.status(400).json({
+      message:
+        "Status must be Pending, In Progress, or Completed"
+    });
+  }
+
+  milestone.status = status;
+
+  return res.status(200).json({
+    message: "Milestone status updated successfully",
+    milestone
+  });
+});
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`API running on http://localhost:${PORT}`);
   });
 }
 
-// Export app for tests
 module.exports = app;
