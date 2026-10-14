@@ -1114,3 +1114,104 @@ test("returns 404 when milestone job title does not exist", async () => {
   assert.strictEqual(response.status, 404);
   assert.strictEqual(response.body.message, "Job not found");
 });
+
+
+async function createMilestoneForStatusTest() {
+  const jobTitle = `Status Test Job ${Date.now()}`;
+
+  const jobResponse = await request(app)
+    .post("/api/jobs")
+    .send({
+      title: jobTitle,
+      description: "A job for milestone status testing",
+      budget: 1000,
+      deadline: "2027-12-20",
+      category: "web-development",
+      skills: "JavaScript"
+    });
+
+  assert.ok(
+    [200, 201].includes(jobResponse.status),
+    `Job creation failed: ${JSON.stringify(jobResponse.body)}`
+  );
+
+  const milestoneResponse = await request(app)
+    .post("/api/milestones")
+    .send({
+      jobTitle,
+      title: "Status Test Milestone",
+      description: "Testing milestone status updates",
+      dueDate: "2027-12-15",
+      amount: 250
+    });
+
+  assert.strictEqual(
+    milestoneResponse.status,
+    201,
+    JSON.stringify(milestoneResponse.body)
+  );
+
+  return milestoneResponse.body.milestone;
+}
+
+test("creates milestones with Pending status", async () => {
+  const milestone = await createMilestoneForStatusTest();
+
+  assert.strictEqual(milestone.status, "Pending");
+});
+
+test("updates a milestone status successfully", async () => {
+  const milestone = await createMilestoneForStatusTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({
+      status: "In Progress"
+    });
+
+  assert.strictEqual(response.status, 200);
+  assert.strictEqual(
+    response.body.message,
+    "Milestone status updated successfully"
+  );
+  assert.strictEqual(
+    response.body.milestone.id,
+    milestone.id
+  );
+  assert.strictEqual(
+    response.body.milestone.status,
+    "In Progress"
+  );
+});
+
+test("rejects an invalid milestone status", async () => {
+  const milestone = await createMilestoneForStatusTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({
+      status: "Cancelled"
+    });
+
+  assert.strictEqual(response.status, 400);
+});
+
+test("returns 404 when updating a nonexistent milestone", async () => {
+  const response = await request(app)
+    .patch("/api/milestones/999999/status")
+    .send({
+      status: "Completed"
+    });
+
+  assert.strictEqual(response.status, 404);
+});
+
+test("rejects an invalid milestone ID", async () => {
+  const response = await request(app)
+    .patch("/api/milestones/abc/status")
+    .send({
+      status: "Completed"
+    });
+
+  assert.strictEqual(response.status, 400);
+});
