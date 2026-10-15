@@ -1215,3 +1215,63 @@ test("rejects an invalid milestone ID", async () => {
 
   assert.strictEqual(response.status, 400);
 });
+
+test("rejects skipping from Pending directly to Completed", async () => {
+  const milestone = await createMilestoneForStatusTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "Completed" });
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Cannot change milestone status from Pending to Completed"
+  );
+});
+
+test("rejects moving a Completed milestone backwards", async () => {
+  const milestone = await createMilestoneForStatusTest();
+
+  await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "In Progress" });
+
+  await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "Completed" });
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "In Progress" });
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Cannot change milestone status from Completed to In Progress"
+  );
+});
+
+test("allows a milestone to progress from Pending to In Progress to Completed", async () => {
+  const milestone = await createMilestoneForStatusTest();
+
+  const inProgressResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "In Progress" });
+
+  assert.strictEqual(inProgressResponse.status, 200);
+  assert.strictEqual(
+    inProgressResponse.body.milestone.status,
+    "In Progress"
+  );
+
+  const completedResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "Completed" });
+
+  assert.strictEqual(completedResponse.status, 200);
+  assert.strictEqual(
+    completedResponse.body.milestone.status,
+    "Completed"
+  );
+});
