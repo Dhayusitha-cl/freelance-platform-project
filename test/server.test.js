@@ -1275,3 +1275,22 @@ test("allows a milestone to progress from Pending to In Progress to Completed", 
     "Completed"
   );
 });
+
+test("keeps the milestone status unchanged after a rejected transition", async () => {
+  const milestone = await createMilestoneForStatusTest();
+
+  // Attempt an invalid transition from Pending directly to Completed.
+  const rejectedResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "Completed" });
+
+  assert.strictEqual(rejectedResponse.status, 400);
+
+  // A valid transition from Pending should still succeed.
+  const validResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "In Progress" });
+
+  assert.strictEqual(validResponse.status, 200);
+  assert.strictEqual(validResponse.body.milestone.status, "In Progress");
+});
