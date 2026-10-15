@@ -1,0 +1,458 @@
+:root {
+    --primary: #3659d9;
+    --primary-dark: #2646bd;
+    --text: #202943;
+    --muted: #68738a;
+    --border: #e1e6ef;
+    --surface: #ffffff;
+    --background: #f5f7fc;
+    --success: #18794e;
+    --success-bg: #e9f7ef;
+    --danger: #b42332;
+    --danger-bg: #fff0f0;
+    --warning: #8a5b00;
+    --warning-bg: #fff5dc;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+}
+
+button,
+a {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible {
+    outline: 3px solid #91aaff;
+    outline-offset: 3px;
+}
+
+.page-header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+}
+
+.header-content {
+    width: min(1080px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 26px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+}
+
+.eyebrow {
+    margin: 0 0 5px;
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.header-content h1 {
+    margin: 0;
+    font-size: clamp(1.6rem, 4vw, 2rem);
+    line-height: 1.2;
+}
+
+.header-subtitle {
+    margin: 8px 0 0;
+    color: var(--muted);
+}
+
+.logout-btn {
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 10px 17px;
+    background: #ffffff;
+    color: var(--text);
+    font-weight: 700;
+}
+
+.logout-btn:hover {
+    background: #f2f4f9;
+}
+
+.page-container {
+    width: min(900px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 24px 0 48px;
+}
+
+.breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.intro {
+    margin-bottom: 22px;
+}
+
+.intro h2 {
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.intro > p:last-child {
+    max-width: 650px;
+    margin: 8px 0 0;
+    color: var(--muted);
+}
+
+.milestone-card {
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(31, 48, 85, 0.06);
+}
+
+.card-top {
+    padding: 25px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    border-bottom: 1px solid var(--border);
+    background: #fbfcff;
+}
+
+.card-top h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.status-badge.pending {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+.status-badge.approved {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.status-badge.rejected {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.milestone-heading {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 28px 28px 10px;
+}
+
+.milestone-icon {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: #edf1ff;
+    color: var(--primary);
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.milestone-heading h2 {
+    margin: 0;
+    font-size: 1.45rem;
+}
+
+.muted {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+.description {
+    margin: 12px 28px 25px;
+    color: #4e5a71;
+}
+
+.details-grid {
+    margin: 0 28px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.detail-item {
+    min-width: 0;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail-item + .detail-item {
+    border-left: 1px solid var(--border);
+}
+
+.detail-label {
+    color: var(--muted);
+    font-size: 0.84rem;
+}
+
+.detail-item strong {
+    overflow-wrap: anywhere;
+    font-size: 1rem;
+}
+
+.review-note {
+    margin: 25px 28px;
+    padding: 15px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1px solid #dce5ff;
+    border-radius: 12px;
+    background: #f4f7ff;
+}
+
+.note-icon {
+    width: 23px;
+    height: 23px;
+    flex: 0 0 23px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #dfe7ff;
+    color: var(--primary-dark);
+    font-weight: 800;
+}
+
+.review-note p {
+    margin: 0;
+    color: #45516a;
+    font-size: 0.92rem;
+}
+
+.review-note strong {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--text);
+}
+
+.decision-section {
+    padding: 24px 28px 28px;
+    border-top: 1px solid var(--border);
+}
+
+.decision-section h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.decision-section > p:not(.form-message) {
+    margin: 5px 0 18px;
+    color: var(--muted);
+}
+
+.decision-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.approve-btn,
+.reject-btn {
+    min-height: 46px;
+    padding: 11px 19px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font-weight: 800;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.approve-btn {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.approve-btn:hover:not(:disabled) {
+    background: var(--primary-dark);
+}
+
+.reject-btn {
+    border-color: #f0c7cb;
+    background: #ffffff;
+    color: var(--danger);
+}
+
+.reject-btn:hover:not(:disabled) {
+    background: var(--danger-bg);
+}
+
+.approve-btn:active:not(:disabled),
+.reject-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.approve-btn:disabled,
+.reject-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.form-message {
+    margin: 16px 0 0;
+    font-weight: 700;
+}
+
+.form-message.success {
+    color: var(--success);
+}
+
+.form-message.error {
+    color: var(--danger);
+}
+
+.form-message.info {
+    color: var(--primary-dark);
+}
+
+.reset-btn {
+    margin-top: 14px;
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    color: var(--primary);
+    font-weight: 800;
+    text-decoration: underline;
+}
+
+.footer-note {
+    margin: 22px 0 0;
+    color: var(--muted);
+    text-align: center;
+    font-size: 0.88rem;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 650px) {
+    .header-content {
+        width: min(100% - 28px, 1080px);
+        padding: 20px 0;
+        align-items: flex-start;
+    }
+
+    .header-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .logout-btn {
+        padding: 8px 11px;
+    }
+
+    .page-container {
+        width: calc(100% - 28px);
+        padding-top: 18px;
+    }
+
+    .card-top {
+        padding: 21px 18px;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .milestone-heading {
+        padding: 23px 18px 8px;
+        align-items: flex-start;
+    }
+
+    .milestone-heading h2 {
+        font-size: 1.25rem;
+    }
+
+    .description {
+        margin: 12px 18px 20px;
+    }
+
+    .details-grid {
+        margin: 0 18px;
+        grid-template-columns: 1fr;
+    }
+
+    .detail-item {
+        padding: 14px 16px;
+    }
+
+    .detail-item + .detail-item {
+        border-left: 0;
+        border-top: 1px solid var(--border);
+    }
+
+    .review-note {
+        margin: 20px 18px;
+    }
+
+    .decision-section {
+        padding: 22px 18px;
+    }
+
+    .decision-actions {
+        flex-direction: column-reverse;
+    }
+
+    .approve-btn,
+    .reject-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+    }
+}
