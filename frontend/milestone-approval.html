@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Review and approve or reject a project milestone.">
+    <title>Milestone Approval - Freelance Platform</title>
+    <link rel="stylesheet" href="milestone-approval.css">
+    <script src="milestone-approval.js" defer></script>
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-content">
+            <div>
+                <p class="eyebrow">FREELANCE PLATFORM</p>
+                <h1>Milestone Review</h1>
+                <p class="header-subtitle">
+                    Review submitted work and record your decision.
+                </p>
+            </div>
+            <button type="button" id="logoutBtn" class="logout-btn">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="client-dashboard.html">Dashboard</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Milestone Review</span>
+        </nav>
+
+        <section class="intro">
+            <p class="eyebrow">CLIENT WORKSPACE</p>
+            <h2>Review your milestone</h2>
+            <p>
+                Check the milestone details before deciding whether to
+                approve or reject the submitted work.
+            </p>
+        </section>
+
+        <section class="milestone-card" aria-labelledby="milestoneTitle">
+            <div class="card-top">
+                <div>
+                    <p class="eyebrow">PROJECT</p>
+                    <h3 id="projectTitle">E-commerce Website Development</h3>
+                </div>
+                <span id="statusBadge" class="status-badge pending">
+                    Pending Review
+                </span>
+            </div>
+
+            <div class="milestone-heading">
+                <div class="milestone-icon" aria-hidden="true">M</div>
+                <div>
+                    <p class="eyebrow">MILESTONE DETAILS</p>
+                    <h2 id="milestoneTitle">Homepage Design</h2>
+                    <p class="muted">
+                        Example details are displayed until milestone data
+                        is connected to the backend.
+                    </p>
+                </div>
+            </div>
+
+            <p class="description">
+                Review the proposed homepage layout, visual styling,
+                navigation, and responsive design for the project.
+            </p>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Milestone amount</span>
+                    <strong id="milestoneAmount">$250.00</strong>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Due date</span>
+                    <strong id="milestoneDueDate">Sample date</strong>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Current status</span>
+                    <strong id="detailStatus">Pending Review</strong>
+                </div>
+            </div>
+
+            <div class="review-note">
+                <span class="note-icon" aria-hidden="true">i</span>
+                <p>
+                    <strong>Before you decide</strong>
+                    Check that the submitted work meets your project
+                    expectations. This page currently previews your decision;
+                    it does not save changes to the server.
+                </p>
+            </div>
+
+            <div class="decision-section">
+                <h3>Your decision</h3>
+                <p>Choose an action after reviewing the milestone.</p>
+
+                <div class="decision-actions">
+                    <button
+                        type="button"
+                        id="rejectBtn"
+                        class="reject-btn"
+                    >
+                        Reject milestone
+                    </button>
+                    <button
+                        type="button"
+                        id="approveBtn"
+                        class="approve-btn"
+                    >
+                        Approve milestone
+                    </button>
+                </div>
+
+                <p
+                    id="formMessage"
+                    class="form-message"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+
+                <button
+                    type="button"
+                    id="resetBtn"
+                    class="reset-btn"
+                    hidden
+                >
+                    Reset preview
+                </button>
+            </div>
+        </section>
+
+        <p class="footer-note">
+            Your project decisions should be clear, considered, and based on
+            the agreed deliverables.
+        </p>
+    </main>
+</body>
+</html>
