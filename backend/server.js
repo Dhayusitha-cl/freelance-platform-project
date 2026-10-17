@@ -11,7 +11,34 @@ const JWT_SECRET =
 
 app.use(cors());
 app.use(express.json());
+function requireClient(req, res, next) {
+  const authHeader = req.headers.authorization;
 
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      message: "Authentication token required"
+    });
+  }
+
+  const token = authHeader.slice(7);
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (decoded.role !== "client") {
+      return res.status(403).json({
+        message: "Only clients can approve or reject milestones"
+      });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      message: "Invalid or expired authentication token"
+    });
+  }
+}
 const users = [];
 const jobs = [];
 const proposals = [];
@@ -582,6 +609,61 @@ app.post("/api/milestones", (req, res) => {
   }
 });
 
+function decideMilestone(req, res, decision) {
+  const milestoneId = Number(req.params.id);
+
+  if (!Number.isInteger(milestoneId) || milestoneId <= 0) {
+    return res.status(400).json({
+      message: "Invalid milestone ID"
+    });
+  }
+
+  const milestone = milestones.find(
+    (item) => item.id === milestoneId
+  );
+
+  if (!milestone) {
+    return res.status(404).json({
+      message: "Milestone not found"
+    });
+  }
+
+  if (milestone.status !== "Completed") {
+    return res.status(400).json({
+      message: "Only completed milestones can be approved or rejected"
+    });
+  }
+
+  if (milestone.approvalStatus) {
+    return res.status(409).json({
+      message: "Milestone already has an approval decision"
+    });
+  }
+
+  milestone.approvalStatus = decision;
+  milestone.decisionAt = new Date().toISOString();
+
+  return res.status(200).json({
+    message: `Milestone ${decision.toLowerCase()} successfully`,
+    milestone
+  });
+}
+
+app.patch(
+  "/api/milestones/:id/approve",
+  requireClient,
+  (req, res) => {
+    return decideMilestone(req, res, "Approved");
+  }
+);
+
+app.patch(
+  "/api/milestones/:id/reject",
+  requireClient,
+  (req, res) => {
+    return decideMilestone(req, res, "Rejected");
+  }
+);
 
 app.patch("/api/milestones/:id/status", (req, res) => {
   const milestoneId = Number(req.params.id);
