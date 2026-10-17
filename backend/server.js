@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
@@ -11,6 +12,7 @@ const JWT_SECRET =
 
 app.use(cors());
 app.use(express.json());
+
 function requireClient(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -39,6 +41,7 @@ function requireClient(req, res, next) {
     });
   }
 }
+
 const users = [];
 const jobs = [];
 const proposals = [];
@@ -59,6 +62,18 @@ app.post("/api/register", async (req, res) => {
     if (!name || !email || !password || !confirmPassword || !role) {
       return res.status(400).json({
         message: "All fields are required"
+      });
+    }
+
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      typeof confirmPassword !== "string" ||
+      typeof role !== "string"
+    ) {
+      return res.status(400).json({
+        message: "All fields must have valid types"
       });
     }
 
@@ -150,6 +165,12 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({
+        message: "Email and password must be strings"
+      });
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
 
     const user = users.find(
@@ -221,7 +242,19 @@ app.post("/api/jobs", (req, res) => {
       });
     }
 
-    if (typeof budget !== "number" || budget <= 0) {
+    if (
+      typeof title !== "string" ||
+      typeof description !== "string" ||
+      typeof deadline !== "string" ||
+      typeof category !== "string" ||
+      (skills !== undefined && typeof skills !== "string")
+    ) {
+      return res.status(400).json({
+        message: "Job fields must have valid types"
+      });
+    }
+
+    if (typeof budget !== "number" || !Number.isFinite(budget) || budget <= 0) {
       return res.status(400).json({
         message: "Budget must be a positive number"
       });
@@ -640,7 +673,24 @@ function decideMilestone(req, res, decision) {
     });
   }
 
+  const feedback = req.body?.feedback;
+
+  if (feedback !== undefined && typeof feedback !== "string") {
+    return res.status(400).json({
+      message: "Feedback must be a string"
+    });
+  }
+
+  const cleanFeedback = (feedback || "").trim();
+
+  if (cleanFeedback.length > 1000) {
+    return res.status(400).json({
+      message: "Feedback must not exceed 1000 characters"
+    });
+  }
+
   milestone.approvalStatus = decision;
+  milestone.feedback = cleanFeedback;
   milestone.decisionAt = new Date().toISOString();
 
   return res.status(200).json({
@@ -702,9 +752,9 @@ app.patch("/api/milestones/:id/status", (req, res) => {
   }
 
   const allowedTransitions = {
-    "Pending": ["In Progress"],
+    Pending: ["In Progress"],
     "In Progress": ["Completed"],
-    "Completed": []
+    Completed: []
   };
 
   if (!allowedTransitions[milestone.status].includes(status)) {
@@ -728,5 +778,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-
-
