@@ -1450,3 +1450,87 @@ test("prevents a second decision on an approved milestone", async () => {
 
   assert.strictEqual(secondResponse.status, 409);
 });
+
+ // =========================
+ // T31: MILESTONE DECISION FEEDBACK TESTS
+ // =========================
+
+test("saves feedback when a client approves a milestone", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+  const feedback = "The work meets all requirements.";
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ feedback });
+
+  assert.strictEqual(response.status, 200);
+  assert.strictEqual(
+    response.body.milestone.approvalStatus,
+    "Approved"
+  );
+  assert.strictEqual(
+    response.body.milestone.feedback,
+    feedback
+  );
+  assert.ok(response.body.milestone.decisionAt);
+});
+
+test("saves feedback when a client rejects a milestone", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+  const feedback = "Please correct the layout and fix the bugs.";
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/reject`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ feedback });
+
+  assert.strictEqual(response.status, 200);
+  assert.strictEqual(
+    response.body.milestone.approvalStatus,
+    "Rejected"
+  );
+  assert.strictEqual(
+    response.body.milestone.feedback,
+    feedback
+  );
+  assert.ok(response.body.milestone.decisionAt);
+});
+
+test("rejects feedback longer than 1000 characters", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ feedback: "a".repeat(1001) });
+
+  assert.strictEqual(response.status, 400);
+});
+
+test("rejects non-string approval feedback", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ feedback: 123 });
+
+  assert.strictEqual(response.status, 400);
+});
+
+test("rejects object as approval feedback", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ feedback: { comment: "Looks good" } });
+
+  assert.strictEqual(response.status, 400);
+});
