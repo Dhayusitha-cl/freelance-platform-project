@@ -1294,3 +1294,159 @@ test("keeps the milestone status unchanged after a rejected transition", async (
   assert.strictEqual(validResponse.status, 200);
   assert.strictEqual(validResponse.body.milestone.status, "In Progress");
 });
+// =========================
+// T30: MILESTONE APPROVAL API TESTS
+// =========================
+
+async function createClientTokenForApprovalTest() {
+  const email = `approval-client-${Date.now()}-${Math.random()}@example.com`;
+
+  const registerResponse = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Approval Test Client",
+      email,
+      password: "password123",
+      confirmPassword: "password123",
+      role: "client"
+    });
+
+  assert.strictEqual(
+    registerResponse.status,
+    201,
+    JSON.stringify(registerResponse.body)
+  );
+
+  const loginResponse = await request(app)
+    .post("/api/login")
+    .send({
+      email,
+      password: "password123"
+    });
+
+  assert.strictEqual(
+    loginResponse.status,
+    200,
+    JSON.stringify(loginResponse.body)
+  );
+
+  return loginResponse.body.token;
+}
+
+async function createCompletedMilestoneForApprovalTest() {
+  const milestone = await createMilestoneForStatusTest();
+
+  const progressResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "In Progress" });
+
+  assert.strictEqual(progressResponse.status, 200);
+
+  const completedResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "Completed" });
+
+  assert.strictEqual(completedResponse.status, 200);
+
+  return completedResponse.body.milestone;
+}
+
+test("allows a client to approve a completed milestone", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`);
+
+  assert.strictEqual(response.status, 200);
+  assert.strictEqual(response.body.milestone.approvalStatus, "Approved");
+  assert.ok(response.body.milestone.decisionAt);
+});
+
+test("allows a client to reject a completed milestone", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/reject`)
+    .set("Authorization", `Bearer ${token}`);
+
+  assert.strictEqual(response.status, 200);
+  assert.strictEqual(response.body.milestone.approvalStatus, "Rejected");
+  assert.ok(response.body.milestone.decisionAt);
+});
+
+test("rejects milestone approval without a token", async () => {
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`);
+
+  assert.strictEqual(response.status, 401);
+});
+
+test("prevents a freelancer from approving a milestone", async () => {
+  const email = `approval-freelancer-${Date.now()}-${Math.random()}@example.com`;
+
+  const registerResponse = await request(app)
+    .post("/api/register")
+    .send({
+      name: "Approval Test Freelancer",
+      email,
+      password: "password123",
+      confirmPassword: "password123",
+      role: "freelancer"
+    });
+
+  assert.strictEqual(registerResponse.status, 201);
+
+  const loginResponse = await request(app)
+    .post("/api/login")
+    .send({
+      email,
+      password: "password123"
+    });
+
+  assert.strictEqual(loginResponse.status, 200);
+
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${loginResponse.body.token}`);
+
+  assert.strictEqual(response.status, 403);
+});
+
+test("rejects approval of a milestone that is not completed", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createMilestoneForStatusTest();
+
+  const response = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`);
+
+  assert.strictEqual(response.status, 400);
+  assert.strictEqual(
+    response.body.message,
+    "Only completed milestones can be approved or rejected"
+  );
+});
+
+test("prevents a second decision on an approved milestone", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createCompletedMilestoneForApprovalTest();
+
+  const firstResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`);
+
+  assert.strictEqual(firstResponse.status, 200);
+
+  const secondResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/reject`)
+    .set("Authorization", `Bearer ${token}`);
+
+  assert.strictEqual(secondResponse.status, 409);
+});
