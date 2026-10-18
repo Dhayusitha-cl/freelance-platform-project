@@ -1534,3 +1534,49 @@ test("rejects object as approval feedback", async () => {
 
   assert.strictEqual(response.status, 400);
 });
+
+
+
+test("completes the full milestone approval flow with feedback", async () => {
+  const token = await createClientTokenForApprovalTest();
+  const milestone = await createMilestoneForStatusTest();
+
+  const inProgressResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "In Progress" });
+
+  assert.strictEqual(inProgressResponse.status, 200);
+
+  const completedResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/status`)
+    .send({ status: "Completed" });
+
+  assert.strictEqual(completedResponse.status, 200);
+
+  const feedback = "Completed work reviewed and approved.";
+
+  const approvalResponse = await request(app)
+    .patch(`/api/milestones/${milestone.id}/approve`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ feedback });
+
+  assert.strictEqual(
+    approvalResponse.status,
+    200,
+    JSON.stringify(approvalResponse.body)
+  );
+
+  assert.strictEqual(
+    approvalResponse.body.milestone.status,
+    "Completed"
+  );
+  assert.strictEqual(
+    approvalResponse.body.milestone.approvalStatus,
+    "Approved"
+  );
+  assert.strictEqual(
+    approvalResponse.body.milestone.feedback,
+    feedback
+  );
+  assert.ok(approvalResponse.body.milestone.decisionAt);
+});
